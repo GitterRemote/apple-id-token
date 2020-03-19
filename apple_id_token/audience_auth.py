@@ -22,7 +22,9 @@ class AudienceAuth(object):
         self.jwt_options = jwt_options
         self._keys_manager = keys_manager or _keys_manager.get()
 
-    def verify_identity_token(self, encoded_identity_token, **kwargs):
+    def verify_identity_token(self, encoded_identity_token,
+                              verify_aud=None, verify_iss=None,
+                              jwt_options=None, **kwargs):
         header = jwt.get_unverified_header(encoded_identity_token)
         key = self._keys_manager.get_signing_key(header.get("kid"))
         if not key:
@@ -32,12 +34,23 @@ class AudienceAuth(object):
             )
         algorithm = header.get("alg", key.algorithm)
 
+        options = None
+        if jwt_options:
+            options = self.jwt_options.copy()
+            options.update(jwt_options)
+        if verify_aud is not None or verify_iss is not None:
+            options = options or self.jwt_options.copy()
+            if verify_iss is not None:
+                options["verify_iss"] = verify_iss
+            if verify_aud is not None:
+                options["verify_aud"] = verify_aud
+
         params = dict(
             key=key.public_key,
             algorithms=[algorithm],
             audience=self.audience,
             issuer=self.issuer,
-            options=self.jwt_options,
+            options=options or self.jwt_options,
         )
 
         params.update(kwargs)
