@@ -58,11 +58,11 @@ class AudienceAuth(object):
         try:
             decoded = jwt.decode(encoded_identity_token, **params)
         except jwt.InvalidSignatureError as e:
-            raise AuthFailedError(algorithm, key, jwt_err=e)
+            raise AuthFailedError(algorithm, key, jwt_err=e) from None
         except jwt.InvalidAlgorithmError as e:
-            raise AuthFailedError(algorithm, key, jwt_err=e)
+            raise AuthFailedError(algorithm, key, jwt_err=e) from None
         except jwt.PyJWTError as e:
-            raise AuthFailedError(jwt_err=e)
+            raise AuthFailedError(jwt_err=e) from e
 
         return decoded
 
